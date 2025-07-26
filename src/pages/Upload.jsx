@@ -17,9 +17,13 @@ function Upload() {
   const { isAnalyzing, analysisProgress, analyzeDocuments } = useAIAnalysis()
 
   useEffect(() => {
-    // Check for stored API key
+    // Check for environment variable first, then stored API key
+    const envKey = import.meta.env.VITE_GEMINI_API_KEY
     const stored = localStorage.getItem('geminiApiKey')
-    if (stored) {
+    
+    if (envKey) {
+      setApiKey(envKey)
+    } else if (stored) {
       setApiKey(stored)
     }
   }, [])

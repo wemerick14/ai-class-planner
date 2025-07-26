@@ -2,8 +2,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 
 class GeminiService {
   constructor() {
-    // API key will need to be provided by user or set in environment
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || null
+    // Use environment variable or stored API key
+    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('geminiApiKey') || null
     this.genAI = null
     this.model = null
     
