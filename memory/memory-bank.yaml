@@ -1,0 +1,99 @@
+# AI Class Planner - Memory Bank
+# This file stores key information, decisions, and context for the project
+
+project:
+  name: "AI Class Planner"
+  description: "Comprehensive degree planning website with transcript upload, AI analysis, and timeline generation"
+  status: "development"
+  created_date: "2025-07-26"
+  last_updated: "2025-07-26"
+
+# Key project decisions and context
+decisions:
+  tech_stack:
+    frontend: "React 18 with Vite"
+    styling: "Tailwind CSS"
+    backend: "Local Storage initially, Supabase later"
+    ai_api: "Google Gemini Flash API"
+    deployment: "Netlify"
+    file_processing: "PDF.js"
+  
+  design_choices:
+    theme: "Clean, student-friendly interface"
+    style: "Modern, responsive design"
+    responsive: true
+    accessibility: "WCAG 2.1 AA compliance"
+
+# User/Client information
+client:
+  background: "Baylor University student (Finance/Marketing/Data Analytics, 4.0 GPA)"
+  target_users:
+    - "Students"
+    - "Academic advisors"
+    - "Educational institutions"
+
+# Project phases and milestones
+phases:
+  phase_0:
+    name: "Requirements Gathering"
+    timeline: "TBD"
+    status: "current"
+    key_deliverables:
+      - "Project requirements definition"
+      - "User personas and use cases"
+      - "Technical architecture decisions"
+      - "Feature prioritization"
+
+# Features to be developed
+features:
+  document_upload:
+    description: "Upload and process transcripts and degree audits"
+    status: "in_progress"
+    priority: "high"
+  
+  student_onboarding:
+    description: "Collect graduation timeline and session preferences"
+    status: "planned"
+    priority: "high"
+  
+  ai_document_analysis:
+    description: "Extract course data and requirements using Gemini API"
+    status: "planned"
+    priority: "medium"
+  
+  timeline_generation:
+    description: "Create graduation scenarios based on preferences"
+    status: "planned"
+    priority: "medium"
+  
+  scenario_planning:
+    description: "Multiple plan creation, comparison, and management"
+    status: "planned"
+    priority: "low"
+
+# Important notes and reminders
+notes:
+  - "Focus on transcript upload and degree audit processing as core MVP"
+  - "Student preferences: graduation date, winter/summer availability, credit load"
+  - "Multiple scenario support for flexible graduation planning"
+  - "Special scheduling dialogue for course constraints"
+  - "AI-powered timeline generation with semester-by-semester plans"
+
+# Open actions for next session
+open_actions:
+  - "Initialize React + Vite project with Tailwind CSS"
+  - "Create file upload component with drag-and-drop support"
+  - "Build student onboarding form for preferences"
+  - "Setup Google Gemini Flash API integration"
+  - "Deploy initial version to Netlify"
+
+# File structure
+file_structure:
+  docs:
+    - "context.md"
+    - "implementation-plan.md"
+  memory:
+    - "memory-bank.yaml"
+    - "session-log.md"
+  handoff:
+    - "handoff.md"
