@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import DocumentPreprocessor from './documentPreprocessor.js'
 
 class GeminiService {
   constructor() {
@@ -28,55 +29,70 @@ class GeminiService {
       throw new Error('Gemini API not configured. Please provide API key.')
     }
 
+    // Preprocess document to reduce token usage and improve accuracy
+    const preprocessed = DocumentPreprocessor.preprocessDocument(documentText, 'transcript')
+    const analysis = DocumentPreprocessor.analyzeDocument(documentText)
+    
+    console.log(`Transcript preprocessing: ${analysis.compressionRatio.toFixed(1)}% reduction, ~${analysis.estimatedTokens} tokens`)
+
     const prompt = `
-    Analyze this academic transcript and extract the following information in JSON format:
+Extract course information from this transcript and return ONLY valid JSON:
 
-    Extract all completed courses with the following structure:
+{
+  "studentInfo": {
+    "name": "Student Name or null",
+    "studentId": "ID or null", 
+    "gpa": "Overall GPA or null",
+    "totalCredits": "Total credits or null"
+  },
+  "completedCourses": [
     {
-      "studentInfo": {
-        "name": "Student Name (if available)",
-        "studentId": "ID (if available)",
-        "gpa": "Overall GPA",
-        "totalCredits": "Total credits completed"
-      },
-      "completedCourses": [
-        {
-          "courseCode": "MATH 1301",
-          "courseName": "College Algebra",
-          "credits": 3,
-          "grade": "A",
-          "semester": "Fall 2022",
-          "gradePoints": 4.0
-        }
-      ],
-      "summary": {
-        "totalCourses": 45,
-        "totalCredits": 87,
-        "gpa": 3.67,
-        "lastSemester": "Spring 2024"
-      }
+      "courseCode": "MATH 1301",
+      "courseName": "College Algebra",
+      "credits": 3,
+      "grade": "A",
+      "semester": "Fall 2022",
+      "gradePoints": 4.0
     }
+  ],
+  "summary": {
+    "totalCourses": 45,
+    "totalCredits": 87,
+    "gpa": 3.67,
+    "lastSemester": "Spring 2024"
+  }
+}
 
-    Document content:
-    ${documentText}
+IMPORTANT: Return ONLY the JSON object, no other text.
 
-    Please extract only actual course information, ignore headers, footers, and formatting. For grades, use standard letter grades (A, B, C, D, F) or numeric equivalents. If information is not available, use null.
+Transcript content:
+${preprocessed}
     `
 
     try {
       const result = await this.model.generateContent(prompt)
       const response = await result.response
-      const text = response.text()
+      const text = response.text().trim()
       
-      // Try to parse JSON from the response
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0])
+      // More robust JSON extraction
+      let jsonText = text
+      
+      // Remove markdown code blocks if present
+      jsonText = jsonText.replace(/```json\s*/, '').replace(/```\s*$/, '')
+      
+      // Find JSON object bounds
+      const startIndex = jsonText.indexOf('{')
+      const lastIndex = jsonText.lastIndexOf('}')
+      
+      if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
+        jsonText = jsonText.substring(startIndex, lastIndex + 1)
+        return JSON.parse(jsonText)
       } else {
-        throw new Error('Could not extract valid JSON from response')
+        throw new Error('No valid JSON object found in response')
       }
     } catch (error) {
       console.error('Error parsing transcript:', error)
+      console.error('Response text:', text)
       throw new Error(`Failed to parse transcript: ${error.message}`)
     }
   }
@@ -86,93 +102,91 @@ class GeminiService {
       throw new Error('Gemini API not configured. Please provide API key.')
     }
 
+    // Preprocess document to reduce token usage and improve accuracy
+    const preprocessed = DocumentPreprocessor.preprocessDocument(documentText, 'degreeAudit')
+    const analysis = DocumentPreprocessor.analyzeDocument(documentText)
+    
+    console.log(`Degree audit preprocessing: ${analysis.compressionRatio.toFixed(1)}% reduction, ~${analysis.estimatedTokens} tokens`)
+
     const prompt = `
-    Analyze this degree audit document and extract remaining requirements in JSON format:
+Extract degree requirements from this audit and return ONLY valid JSON:
 
-    Extract the following structure:
-    {
-      "degreeInfo": {
-        "degreeName": "Bachelor of Business Administration",
-        "major": "Finance",
-        "minor": "Data Analytics (if applicable)",
-        "expectedGraduation": "Spring 2026"
-      },
-      "requirements": {
-        "majorRequirements": {
-          "totalRequired": 36,
-          "completed": 24,
-          "remaining": [
-            {
-              "courseCode": "FIN 4350",
-              "courseName": "Corporate Finance",
-              "credits": 3,
-              "prerequisites": ["FIN 3320"],
-              "offered": ["Fall", "Spring"]
-            }
-          ]
-        },
-        "minorRequirements": {
-          "totalRequired": 18,
-          "completed": 12,
-          "remaining": [
-            {
-              "courseCode": "DATA 3310",
-              "courseName": "Database Management",
-              "credits": 3,
-              "prerequisites": ["MIS 2301"],
-              "offered": ["Fall", "Spring"]
-            }
-          ]
-        },
-        "generalEducation": {
-          "totalRequired": 42,
-          "completed": 36,
-          "remaining": [
-            {
-              "category": "History",
-              "courseCode": "HIST 2301",
-              "courseName": "Texas History",
-              "credits": 3,
-              "prerequisites": [],
-              "offered": ["Fall", "Spring", "Summer"]
-            }
-          ]
-        },
-        "electives": {
-          "totalRequired": 24,
-          "completed": 15,
-          "remaining": 9,
-          "description": "Any 3000+ level courses"
+{
+  "degreeInfo": {
+    "degreeName": "Bachelor of Business Administration or null",
+    "major": "Finance or null",
+    "minor": "Data Analytics or null",
+    "expectedGraduation": "Spring 2026 or null"
+  },
+  "requirements": {
+    "majorRequirements": {
+      "totalRequired": 36,
+      "completed": 24,
+      "remaining": [
+        {
+          "courseCode": "FIN 4350",
+          "courseName": "Corporate Finance",
+          "credits": 3,
+          "prerequisites": ["FIN 3320"],
+          "offered": ["Fall", "Spring"]
         }
-      },
-      "summary": {
-        "totalCreditsRequired": 120,
-        "totalCreditsCompleted": 87,
-        "totalCreditsRemaining": 33,
-        "estimatedSemesters": 3
-      }
+      ]
+    },
+    "minorRequirements": {
+      "totalRequired": 18,
+      "completed": 12,
+      "remaining": []
+    },
+    "generalEducation": {
+      "totalRequired": 42,
+      "completed": 36,
+      "remaining": []
+    },
+    "electives": {
+      "totalRequired": 24,
+      "completed": 15,
+      "remaining": 9,
+      "description": "Any 3000+ level courses"
     }
+  },
+  "summary": {
+    "totalCreditsRequired": 120,
+    "totalCreditsCompleted": 87,
+    "totalCreditsRemaining": 33,
+    "estimatedSemesters": 3
+  }
+}
 
-    Document content:
-    ${documentText}
+IMPORTANT: Return ONLY the JSON object, no other text.
 
-    Focus on identifying specific course requirements, not completed courses. Extract course codes, names, credit hours, and any scheduling information (fall/spring/summer offerings). If information is not available, use reasonable defaults.
+Degree audit content:
+${preprocessed}
     `
 
     try {
       const result = await this.model.generateContent(prompt)
       const response = await result.response
-      const text = response.text()
+      const text = response.text().trim()
       
-      // Try to parse JSON from the response
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0])
+      // More robust JSON extraction
+      let jsonText = text
+      
+      // Remove markdown code blocks if present
+      jsonText = jsonText.replace(/```json\s*/, '').replace(/```\s*$/, '')
+      
+      // Find JSON object bounds
+      const startIndex = jsonText.indexOf('{')
+      const lastIndex = jsonText.lastIndexOf('}')
+      
+      if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
+        jsonText = jsonText.substring(startIndex, lastIndex + 1)
+        return JSON.parse(jsonText)
       } else {
-        throw new Error('Could not extract valid JSON from response')
+        throw new Error('No valid JSON object found in response')
       }
     } catch (error) {
       console.error('Error parsing degree audit:', error)
+      console.error('Response text:', text)
       throw new Error(`Failed to parse degree audit: ${error.message}`)
     }
   }

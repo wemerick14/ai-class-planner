@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
-import chunkedGeminiService from '../services/chunkedGeminiService'
+import geminiService from '../services/geminiService'
 import documentProcessor from '../services/documentProcessor'
-import DocumentPreprocessor from '../services/documentPreprocessor'
 
 export function useAIAnalysis() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -28,14 +27,14 @@ export function useAIAnalysis() {
     try {
       // Set up Gemini API key
       if (apiKey) {
-        chunkedGeminiService.setApiKey(apiKey)
+        geminiService.setApiKey(apiKey)
       }
 
-      if (!chunkedGeminiService.isConfigured()) {
+      if (!geminiService.isConfigured()) {
         throw new Error('Gemini API key is required for document analysis')
       }
 
-      updateProgress('Extracting text from documents', 5, 'Processing uploaded files...')
+      updateProgress('Extracting text from documents', 10, 'Processing uploaded files...')
       
       // Process uploaded files
       const documentResults = await documentProcessor.processDocuments(
@@ -57,34 +56,22 @@ export function useAIAnalysis() {
         files.degreeAudit?.name === result.file
       )
 
-      // Show document analysis info
-      if (transcriptFile) {
-        const analysis = DocumentPreprocessor.analyzeDocument(transcriptFile.text)
-        updateProgress('Preprocessing transcript', 8, 
-          `Document compressed by ${analysis.compressionRatio.toFixed(1)}% (${analysis.chunkCount} chunks, ~${analysis.estimatedTokens} tokens)`
-        )
-      }
-
       let transcriptData = null
       let degreeAuditData = null
 
-      // Parse transcript if available using chunked approach
+      // Parse transcript if available - simple single API call with preprocessing
       if (transcriptFile) {
-        transcriptData = await chunkedGeminiService.parseTranscriptChunked(
-          transcriptFile.text, 
-          updateProgress
-        )
+        updateProgress('Analyzing transcript', 30, 'Extracting course history and grades with AI preprocessing...')
+        transcriptData = await geminiService.parseTranscript(transcriptFile.text)
         
         // Store in localStorage for persistence
         localStorage.setItem('transcriptData', JSON.stringify(transcriptData))
       }
 
-      // Parse degree audit if available using chunked approach
+      // Parse degree audit if available - simple single API call with preprocessing
       if (degreeAuditFile) {
-        degreeAuditData = await chunkedGeminiService.parseDegreeAuditChunked(
-          degreeAuditFile.text,
-          updateProgress
-        )
+        updateProgress('Analyzing degree audit', 60, 'Identifying remaining requirements with AI preprocessing...')
+        degreeAuditData = await geminiService.parseDegreeAudit(degreeAuditFile.text)
         
         // Store in localStorage for persistence
         localStorage.setItem('degreeAuditData', JSON.stringify(degreeAuditData))
@@ -93,11 +80,11 @@ export function useAIAnalysis() {
       // Generate timeline if we have sufficient data
       let timelineData = null
       if ((transcriptData || degreeAuditData) && preferences) {
-        timelineData = await chunkedGeminiService.generateGraduationTimeline(
+        updateProgress('Generating graduation timeline', 85, 'Creating personalized graduation scenarios...')
+        timelineData = await geminiService.generateGraduationTimeline(
           transcriptData, 
           degreeAuditData, 
-          preferences,
-          updateProgress
+          preferences
         )
         
         // Store in localStorage for persistence
