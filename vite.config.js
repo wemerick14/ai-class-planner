@@ -10,16 +10,6 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'pdf-worker': ['pdfjs-dist']
-        }
-      }
-    }
-  },
-  optimizeDeps: {
-    include: ['pdfjs-dist']
+    sourcemap: true
   }
 })

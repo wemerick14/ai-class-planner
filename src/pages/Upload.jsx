@@ -237,6 +237,12 @@ function Upload() {
             Generate personalized graduation scenarios just for you
           </li>
         </ul>
+        
+        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            <strong>Tip:</strong> If you have issues with PDF files, try saving them as TXT files for better compatibility.
+          </p>
+        </div>
       </div>
 
       {/* Continue Button */}
