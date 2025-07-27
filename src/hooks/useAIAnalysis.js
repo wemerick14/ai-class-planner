@@ -100,6 +100,7 @@ export function useAIAnalysis() {
         error: null
       }
 
+      console.log('useAIAnalysis - Setting results:', results)
       setAnalysisResults(results)
       
       // Store complete analysis results
@@ -131,14 +132,17 @@ export function useAIAnalysis() {
   const loadStoredResults = useCallback(() => {
     try {
       const stored = localStorage.getItem('analysisResults')
+      console.log('useAIAnalysis - Loading stored results:', stored)
       if (stored) {
         const results = JSON.parse(stored)
+        console.log('useAIAnalysis - Parsed stored results:', results)
         setAnalysisResults(results)
         return results
       }
     } catch (error) {
       console.error('Error loading stored results:', error)
     }
+    console.log('useAIAnalysis - No stored results found')
     return null
   }, [])
 

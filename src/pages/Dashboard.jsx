@@ -12,6 +12,10 @@ function Dashboard() {
     const files = localStorage.getItem('uploadedFiles')
     const prefs = localStorage.getItem('studentPreferences')
     
+    console.log('Dashboard - Loading from localStorage:')
+    console.log('Files:', files)
+    console.log('Preferences:', prefs)
+    
     if (files) setUploadedFiles(JSON.parse(files))
     if (prefs) setPreferences(JSON.parse(prefs))
     
@@ -19,9 +23,28 @@ function Dashboard() {
     loadStoredResults()
   }, [loadStoredResults])
 
+  // Debug logging
+  console.log('Dashboard render - analysisResults:', analysisResults)
+  console.log('Dashboard render - isAnalyzing:', isAnalyzing)
+  console.log('Dashboard render - uploadedFiles:', uploadedFiles)
+
   // Show analysis progress if currently analyzing
   if (isAnalyzing) {
+    console.log('Dashboard - Showing analysis progress')
     return <AnalysisProgress progress={analysisProgress} isVisible={true} />
+  }
+
+  // Add error boundary for data processing
+  if (!analysisResults) {
+    console.log('Dashboard - No analysis results found, using mock data')
+    return (
+      <div className="max-w-6xl mx-auto p-4">
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+          <strong>Debug:</strong> No analysis results found. Using mock data.
+        </div>
+        {renderDashboardContent(mockData)}
+      </div>
+    )
   }
 
   // Use real analysis data if available, otherwise fall back to mock data
@@ -79,7 +102,15 @@ function Dashboard() {
 
   const progressPercentage = (data.completedCredits / data.totalCredits) * 100
 
-  return (
+  console.log('Dashboard - Final data object:', data)
+  console.log('Dashboard - Progress percentage:', progressPercentage)
+
+  return renderDashboardContent(data)
+}
+
+function renderDashboardContent(data) {
+  try {
+    return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="text-center">
@@ -222,7 +253,19 @@ function Dashboard() {
         </div>
       )}
     </div>
-  )
+    )
+  } catch (error) {
+    console.error('Dashboard render error:', error)
+    return (
+      <div className="max-w-6xl mx-auto p-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <strong>Dashboard Error:</strong> {error.message}
+          <br />
+          <small>Check console for details</small>
+        </div>
+      </div>
+    )
+  }
 }
 
 export default Dashboard
